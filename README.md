@@ -1,21 +1,34 @@
-# IMAGE_MANAGEMENT
-基于Vue3+Element Plus+Django+DRF的本地图片管理工具，包括图片的查看、分类、移动、复制、删除、重命名、元数据修改、固定命名格式批量重命名、按照日期查看等功能
+<h2 align="center"> IMAGE_MANAGEMENT </h2>
+
+---
+
+<div align="center">
+    <img alt="Static Badge" src="https://img.shields.io/badge/Vue-3.5.13-gray?style=flat&logo=vue.js&labelColor=black">
+    <img alt="Static Badge" src="https://img.shields.io/badge/Vite-6.2.0-gray?style=flat&logo=vite&labelColor=black">
+    <img alt="Static Badge" src="https://img.shields.io/badge/Element_Plus-2.9.10-gray?style=flat&logo=elementplus&labelColor=black">
+    <img alt="Static Badge" src="https://img.shields.io/badge/Django-5.2.1-gray?style=flat&logo=django&labelColor=black">
+    <img src="https://img.shields.io/badge/DEV-1-gray?style=flat&labelColor=red" alt=""/>
+</div>
+
+<p align="center"> 基于Vue3+Element Plus+Django+DRF的本地图片管理工具，包括图片的查看、分类、移动、复制、删除、重命名、元数据修改、固定命名格式批量重命名、按照日期查看等功能</p>
 
 ## 开发服务器启动
 ### 前端
-`cd fontend`
+```console
+cd fontend
+npm install
+num run dev
+```
 
-`npm install`
-
-`num run dev`
 ### 后端
  - 最好使用虚拟环境
 
-`pip install -r requirements.txt`
+```console
+pip install -r requirements.txt
+cd backend
+python manage.py runserver
+```
 
-`cd backend`
-
-`python manage.py runserver`
 ## 功能设计
 
 <a href="Function Design/IMAGE_MANAGEMENT.pdf" title="点击查看功能设计思维导图PDF">
