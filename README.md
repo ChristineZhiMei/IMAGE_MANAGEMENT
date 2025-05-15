@@ -2,7 +2,7 @@
 
 <div align="center">
     <img alt="Static Badge" src="https://img.shields.io/badge/Vue-3.5.13-gray?style=flat&logo=vue.js&labelColor=black">
-    <img alt="Static Badge" src="https://img.shields.io/badge/Vite-6.2.0-gray?style=flat&logo=vite&labelColor=black">
+    <img alt="Static Badge" src="https://img.shields.io/badge/Vite-6.3.5-gray?style=flat&logo=vite&labelColor=black">
     <img alt="Static Badge" src="https://img.shields.io/badge/Element_Plus-2.9.10-gray?style=flat&logo=elementplus&labelColor=black">
     <img alt="Static Badge" src="https://img.shields.io/badge/Django-5.2.1-gray?style=flat&logo=django&labelColor=black">
     <img src="https://img.shields.io/badge/DEV-1-gray?style=flat&labelColor=red" alt=""/>
