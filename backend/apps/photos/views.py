@@ -1,13 +1,13 @@
 import json
 import time
-from http.client import responses
 
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
 from django.views import View
 
+# noinspection PyUnresolvedReferences
 from apps.photos.serializers import DefaultInfo,DefaultSerializer
 
+# noinspection PyUnresolvedReferences
 from config import ConfigController
 
 configSG = ConfigController()
@@ -45,6 +45,15 @@ class SettingsView(View):
             'timestamp':time.time()
         }
         print(response)
+        return JsonResponse(response)
+    def get(self, request):
+        settings = configSG.get_setting()
+        response = {
+           'status':1,
+            'readPath':settings[0],
+            'cachePath':settings[1],
+            'description':'获取成功'
+        }
         return JsonResponse(response)
 # 设置分类标签
 class ClassifyView(View):
