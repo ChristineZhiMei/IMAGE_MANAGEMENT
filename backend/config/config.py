@@ -70,4 +70,4 @@ class ConfigController:
         # 写入配置
         with open(self.config_path, 'w', encoding='utf-8') as configfile:
             self.config.write(configfile)
-        return "分类标签设置完成"
+        return 1,"分类标签设置完成"

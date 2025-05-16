@@ -46,3 +46,23 @@ class SettingsView(View):
         }
         print(response)
         return JsonResponse(response)
+# 设置分类标签
+class ClassifyView(View):
+    def get(self, request):
+        labels = configSG.get_classify()
+        response = {
+            'status':1,
+            'classifyLabels':labels,
+            'description':'获取成功',
+            'timestamp':time.time(),
+        }
+        return JsonResponse(response)
+    def post(self, request):
+        labels = json.loads(request.body)['classifyLabels']
+        logs = configSG.set_classify(labels)
+        response = {
+            'status':logs[0],
+            'description':logs[1],
+            'timestamp':time.time(),
+        }
+        return JsonResponse(response)
