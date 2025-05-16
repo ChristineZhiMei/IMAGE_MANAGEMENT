@@ -5,8 +5,9 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 
 # noinspection PyUnresolvedReferences
-from apps.photos.serializers import DefaultInfo,DefaultSerializer
-
+from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer
+# noinspection PyUnresolvedReferences
+from apps.photos.utils import delete_photos
 # noinspection PyUnresolvedReferences
 from config import ConfigController
 
@@ -24,7 +25,7 @@ class DefaultView(View):
     def get(self, request):
         info = DefaultInfo()
         serializer = DefaultSerializer(info)
-        print(serializer.data)
+        # print(serializer.data)
         return JsonResponse(serializer.data)
 
 #设置路径
@@ -44,7 +45,7 @@ class SettingsView(View):
             'description':logs[1]+' | '+logs[2],
             'timestamp':time.time()
         }
-        print(response)
+        # print(response)
         return JsonResponse(response)
     def get(self, request):
         settings = configSG.get_setting()
@@ -75,3 +76,19 @@ class ClassifyView(View):
             'timestamp':time.time(),
         }
         return JsonResponse(response)
+
+# 删除图片
+class DeleteView(View):
+    def post(self, request):
+        filePaths = json.loads(request.body)['filePath']
+        logs = delete_photos(filePaths)
+        # print(logs)
+        Response = BasicResponse(logs['status'],
+                                 logs['operation'],
+                                 logs['failedPath'],
+                                 logs['totalNum'],
+                                 logs['successNum'],
+                                 logs['failedNum'],
+                                 logs['description'])
+        serializer = BasicResponseSerializer(Response)
+        return JsonResponse(serializer.data)

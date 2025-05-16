@@ -7,6 +7,7 @@
 
 from rest_framework import serializers
 import time
+# noinspection PyUnresolvedReferences
 from config import ConfigController
 # 设置默认信息对象
 configSG = ConfigController()
@@ -49,3 +50,38 @@ class SettingPath(object):
 class SettingPathSerializer(serializers.Serializer):
     read_path = serializers.CharField()
     cache_path = serializers.CharField()
+
+# 设置基本返回格式
+class BasicResponse(object):
+    def __init__(
+            self,
+            status:int,
+            operation:str,
+            failedPath: list[dict[str,str]],
+            totalNum:int,
+            successNum:int,
+            failedNum:int,
+            description:str,
+    ):
+        self.status = status
+        self.operation = operation
+        self.failedPath = failedPath
+        self.totalNum = totalNum
+        self.successNum = successNum
+        self.failedNum = failedNum
+        self.description = description
+        self.timestamp = time.time()
+# 序列化基本返回格式对象
+class BasicResponseSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    operation = serializers.CharField()
+    failedPath = serializers.ListField(
+        child=serializers.DictField(
+            child=serializers.CharField()
+        )
+    )
+    totalNum = serializers.IntegerField()
+    successNum = serializers.IntegerField()
+    failedNum = serializers.IntegerField()
+    description = serializers.CharField(allow_blank=True)
+    timestamp = serializers.FloatField()
