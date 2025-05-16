@@ -28,6 +28,7 @@ python manage.py runserver
 ```
 
 ## 功能设计
+标红部分为已完成功能
 
 <a href="Function Design/IMAGE_MANAGEMENT.pdf" title="点击查看功能设计思维导图PDF">
   <img 
