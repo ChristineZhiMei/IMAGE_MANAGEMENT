@@ -1,3 +1,14 @@
-:root{
-  font-family: Poppins;
+@import "tailwindcss";
+
+:root, html, body, #app{
+  font-family: Poppins, sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#app{
+  width: 100%;
+  height: 100dvh;
+  position: fixed;
 }
