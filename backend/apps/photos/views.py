@@ -46,6 +46,15 @@ class SettingsView(View):
         }
         print(response)
         return JsonResponse(response)
+    def get(self, request):
+        settings = configSG.get_setting()
+        response = {
+           'status':1,
+            'readPath':settings[0],
+            'cachePath':settings[1],
+            'description':'获取成功'
+        }
+        return JsonResponse(response)
 # 设置分类标签
 class ClassifyView(View):
     def get(self, request):
