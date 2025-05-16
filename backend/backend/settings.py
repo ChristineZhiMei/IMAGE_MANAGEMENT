@@ -18,6 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # noinspection PyTypeChecker
 sys.path.insert(0,BASE_DIR)
 sys.path.insert(0,os.path.join(BASE_DIR,'apps'))
+sys.path.insert(0,os.path.join(BASE_DIR,'config'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -141,6 +142,3 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-from config.paths import SOURCE_DIR, CACHE_DIR
-SOURCE_DIR = SOURCE_DIR  # 源文件目录（待读取的本地文件夹）
-CACHE_DIR = CACHE_DIR

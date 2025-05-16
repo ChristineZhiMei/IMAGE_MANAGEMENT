@@ -1,2 +1,0 @@
-SOURCE_DIR = ''
-CACHE_DIR = ''

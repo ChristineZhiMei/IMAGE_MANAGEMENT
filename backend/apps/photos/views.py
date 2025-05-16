@@ -1,8 +1,16 @@
-from django.http import HttpResponse
+import json
+import time
+from http.client import responses
+
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views import View
 
+from apps.photos.serializers import DefaultInfo,DefaultSerializer
 
+from config import ConfigController
+
+configSG = ConfigController()
 # Create your views here.
 class PhotoMainView(View):
     def get(self, request):
@@ -11,3 +19,30 @@ class PhotoMainView(View):
     def post(self, request):
         print("post请求")
         return HttpResponse("post请求")
+# 获取默认信息
+class DefaultView(View):
+    def get(self, request):
+        info = DefaultInfo()
+        serializer = DefaultSerializer(info)
+        print(serializer.data)
+        return JsonResponse(serializer.data)
+
+#设置路径
+class SettingsView(View):
+    def post(self, request):
+        settings = json.loads(request.body)
+        if settings['readPath'] == settings['cachePath']:
+            response = {
+                'status':0,
+                'description':'读取路径和缓存路径不能相同',
+                'timestamp':time.time()
+            }
+            return JsonResponse(response)
+        logs = configSG.set_setting(settings['readPath'],settings['cachePath'])
+        response = {
+            'status':logs[0],
+            'description':logs[1]+' | '+logs[2],
+            'timestamp':time.time()
+        }
+        print(response)
+        return JsonResponse(response)
