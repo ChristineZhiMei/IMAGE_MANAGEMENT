@@ -77,10 +77,10 @@ def delete_photos(filePaths:list[str]):
     response_unified_changed(response,'删除')
     return response
 
-# 剪切（移动）文件到指定目录
+# 剪切（移动）/复制 文件到指定目录
 @add_timestamp
-def move_photos(filePaths:list[str],folderPath:str):
-    response = response_Type(filePaths,'move')
+def copy_move_photos(filePaths:list[str],folderPath:str,operation:str):
+    response = response_Type(filePaths,operation)
     if response['totalNum'] == 0:
         response['status'] = 0
         response['description'] = '未选择任何文件'
@@ -98,23 +98,23 @@ def move_photos(filePaths:list[str],folderPath:str):
                 'description':'文件不存在'
             })
             continue
-        # 判断文件是否已经存在于所制定的目录
-        if os.path.dirname(filePath) == folderPath:
+        # 若操作为移动，则判断文件本身是否已经存在于所指定的目录
+        if os.path.dirname(filePath) == folderPath and operation == 'move':
             response['failedPath'].append({
                 'path':filePath,
-                'description':'文件已存在于指定目录'
+                'description':'该文件所在文件夹为指定文件夹，无法移动'
             })
             continue
-        # 获取指定目录下的文件名称路径
+        # 获取指定目录下的新文件路径
         newfilePath = conflict_rename(os.path.join(folderPath,os.path.basename(filePath)))
-        # 开始移动
+        # 开始移动/复制
         try:
-            shutil.move(filePath, newfilePath)
+            shutil.move(filePath, newfilePath) if operation == 'move' else shutil.copy(filePath, newfilePath)
         except FileExistsError as e:
             response['failedPath'].append({
                 'path':filePath,
                 'description':e
             })
             continue
-    response_unified_changed(response,'移动')
+    response_unified_changed(response,'移动' if operation == 'move' else '复制')
     return response

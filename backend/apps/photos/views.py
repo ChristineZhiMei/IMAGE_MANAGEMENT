@@ -3,11 +3,11 @@ import time
 
 from django.http import HttpResponse, JsonResponse
 from django.views import View
-
+from django.urls import resolve
 # noinspection PyUnresolvedReferences
 from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer
 # noinspection PyUnresolvedReferences
-from apps.photos.utils import delete_photos,move_photos
+from apps.photos.utils import delete_photos,copy_move_photos
 # noinspection PyUnresolvedReferences
 from config import ConfigController
 
@@ -96,12 +96,16 @@ class DeleteView(View):
         return JsonResponse(serializer.data)
 
 # 移动图片
-class MovingView(View):
+class CopyMovingView(View):
     def post(self,request):
+        # 反向解析url路径名称
+        match = resolve(request.path_info)
+        url_pattern = match.route.replace('/','')
+        #
         requestTemp = json.loads(request.body)
         filePaths = requestTemp['filePath']
         folderPath = requestTemp['folderPath']
-        logs = move_photos(filePaths,folderPath)
+        logs = copy_move_photos(filePaths,folderPath,url_pattern)
         Response = BasicResponse(logs['status'],
                                  logs['operation'],
                                  logs['failedPath'],
