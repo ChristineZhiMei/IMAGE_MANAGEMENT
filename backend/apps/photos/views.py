@@ -7,13 +7,15 @@ from django.views import View
 # noinspection PyUnresolvedReferences
 from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer
 # noinspection PyUnresolvedReferences
-from apps.photos.utils import delete_photos
+from apps.photos.utils import delete_photos,move_photos
 # noinspection PyUnresolvedReferences
 from config import ConfigController
 
 configSG = ConfigController()
 # Create your views here.
+# noinspection PyUnusedLocal
 class PhotoMainView(View):
+    # noinspection PyUnusedLocal
     def get(self, request):
         print("get请求")
         return HttpResponse("get请求")
@@ -83,6 +85,23 @@ class DeleteView(View):
         filePaths = json.loads(request.body)['filePath']
         logs = delete_photos(filePaths)
         # print(logs)
+        Response = BasicResponse(logs['status'],
+                                 logs['operation'],
+                                 logs['failedPath'],
+                                 logs['totalNum'],
+                                 logs['successNum'],
+                                 logs['failedNum'],
+                                 logs['description'])
+        serializer = BasicResponseSerializer(Response)
+        return JsonResponse(serializer.data)
+
+# 移动图片
+class MovingView(View):
+    def post(self,request):
+        requestTemp = json.loads(request.body)
+        filePaths = requestTemp['filePath']
+        folderPath = requestTemp['folderPath']
+        logs = move_photos(filePaths,folderPath)
         Response = BasicResponse(logs['status'],
                                  logs['operation'],
                                  logs['failedPath'],
