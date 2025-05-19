@@ -5,11 +5,13 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.urls import resolve
 # noinspection PyUnresolvedReferences
-from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer
+from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer,EditExifResponse,EditExifResponseSerializer
 # noinspection PyUnresolvedReferences
-from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos
+from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos,crop_image
 # noinspection PyUnresolvedReferences
 from config import ConfigController
+# noinspection PyUnresolvedReferences
+from apps.photos.utils import getEditExif
 
 configSG = ConfigController()
 # Create your views here.
@@ -150,3 +152,35 @@ class RenameView(View):
                                  logs['description'])
         serializer = BasicResponseSerializer(Response)
         return JsonResponse(serializer.data)
+
+class CropView(View):
+    def post(self,request):
+        requestTemp = json.loads(request.body)
+        filePaths = requestTemp['filePath']
+        folderPath = requestTemp['folderPath']
+        logs = crop_image(filePaths,folderPath)
+        Response = BasicResponse(logs['status'],
+                                 logs['operation'],
+                                 logs['failedPath'],
+                                 logs['totalNum'],
+                                 logs['successNum'],
+                                 logs['failedNum'],
+                                 logs['description'])
+        serializer = BasicResponseSerializer(Response)
+        return JsonResponse(serializer.data)
+
+class EditExifView(View):
+    def post(self,request):
+        match = resolve(request.path_info)
+        url_pattern = match.route
+        print(url_pattern)
+        if url_pattern == 'edit/getExif/':
+            filePath = json.loads(request.body)['filePath']
+            logs = getEditExif(filePath)
+            Response = EditExifResponse(logs['status'],
+                                        logs['description'],
+                                        logs['camera_info'],
+                                        logs['photo_info'])
+            serializer = EditExifResponseSerializer(Response)
+            return JsonResponse(serializer.data)
+

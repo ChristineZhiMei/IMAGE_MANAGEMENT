@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pyexiv2 import Image as ImgPyexiv
 import rawpy
 import os
 import shutil
@@ -6,7 +7,7 @@ import time
 from send2trash import send2trash
 from functools import wraps
 from PIL import Image
-
+import piexif
 # noinspection PyUnresolvedReferences
 from apps.photos.utils_set.get_time import get_image_time
 
@@ -184,6 +185,11 @@ def format_convert(filePaths,folderPath):
                 continue
         else:
             try:
+                # 使用 pyexiv2 读取原始 RAW 文件的元数据
+                with ImgPyexiv(filePath[0],encoding='GBK') as src_img:
+                    metadata = src_img.read_exif()
+                    # 获取原始方向标签
+                    original_orientation = metadata.get('Exif.Image.Orientation', 1)
                 # 读取RAW文件
                 with rawpy.imread(filePath[0]) as raw:
                     # 使用相机预设的白平衡
@@ -196,6 +202,15 @@ def format_convert(filePaths,folderPath):
                     )
                     img = Image.fromarray(rgb)
                     img.save(newfilePath, quality=95, subsampling=0)
+                if filePath[1] == 'JPEG':
+                    with ImgPyexiv(newfilePath,encoding='GBK') as dst_img:
+                        # 移除或重置方向标签（像素数据已校正，避免查看器再次旋转）
+                        if 'Exif.Image.Orientation' in metadata:
+                            metadata['Exif.Image.Orientation'] = 1  # 设为 1 表示正常方向
+                        # 正确设置尺寸（不交换宽高）
+                        metadata['Exif.Photo.PixelXDimension'] = img.width
+                        metadata['Exif.Photo.PixelYDimension'] = img.height
+                        dst_img.modify_exif(metadata)
             except Exception as e:
                 response['failedPath'].append({
                     'path':filePath,
@@ -271,3 +286,99 @@ def rename_photos(filePaths:list[list[str]],option:str,renameFormat:str):
                 continue
     response_unified_changed(response,'重命名')
     return response
+
+@add_timestamp
+def crop_image(filePaths:list[list[str]],folderPath):
+    response = response_Type(filePaths,'crop')
+
+    if response['totalNum'] == 0:
+        response['status'] = 0
+        response['description'] = '未选择任何文件'
+        return response
+    # 判断指定路径是否为目录
+    if not os.path.isdir(folderPath):
+        response['status'] = 0
+        response['description'] = '指定目录不存在'
+        return response
+
+    for filePath in filePaths:
+        # 判断文件是否存在
+        if not os.path.isfile(filePath[0]):
+            response['failedPath'].append({
+                'path':filePath,
+                'description':'文件不存在'
+            })
+            continue
+
+        try:
+            filename,extension_temp = os.path.splitext(os.path.basename(filePath[0]))
+            # 读取原始图片的 EXIF 数据
+            exif_dict = {}
+            with Image.open(filePath[0]) as img:
+                exif_data = img._getexif()
+                if exif_data:
+                    exif_dict = piexif.load(exif_data)
+                width, height = img.size
+                # 计算图片的裁剪大小
+                left, left_top, right, right_bottom = width * filePath[1][0], height * filePath[1][1], width * filePath[1][2], height * filePath[1][3]
+                # 裁剪图片
+                cropped_img = img.crop((left, left_top, right, right_bottom))
+                # 保存裁剪后的图片
+                newfilePath = conflict_rename(os.path.join(folderPath,str(filename + extension_temp)))
+                # 写入元信息
+                if exif_dict:
+                    exif_bytes = piexif.dump(exif_dict)
+                    cropped_img.save(newfilePath, exif=exif_bytes)
+                else:
+                    cropped_img.save(newfilePath)
+        except Exception as e:
+            response['failedPath'].append({
+                'path':filePath,
+                'description':str(e)
+            })
+        return response
+
+# 获取元信息
+@add_timestamp
+def getEditExif(filePath:str):
+    if not os.path.isfile(filePath):
+        return {
+            'status':0,
+            'description':'文件不存在',
+            'camera_info':{},
+            'photo_info':{},
+        }
+    else:
+        try:
+            with ImgPyexiv(r"E:\临时\semi-utils-beta\semi-utils-build1520\output\DSC_8482-已增强-降噪-1.jpg",encoding='GBK') as img:
+                exif_data = img.read_exif()
+                camera_info = {
+                    "equipment_brand": exif_data.get("Exif.Image.Make", "未知"),
+                    "equipment_model": exif_data.get("Exif.Image.Model", "未知"),
+                    "shooting_time": exif_data.get("Exif.Photo.DateTimeOriginal", "未知"),
+                    "lens_model": exif_data.get('Exif.Photo.LensModel',"未知")
+                }
+                # 提取拍摄参数
+                photo_info = {
+                    "aperture": exif_data.get("Exif.Photo.FNumber", "未知"),
+                    "shutter_speed": exif_data.get("Exif.Photo.ExposureTime", "未知"),
+                    "ISO": exif_data.get("Exif.Photo.ISOSpeedRatings", "未知"),
+                    "focal_length": exif_data.get("Exif.Photo.FocalLength", "未知"),
+                }
+        except Exception as e:
+            return {
+               'status':0,
+                'description':str(e),
+                'camera_info':{},
+                'photo_info':{},
+            }
+        return {
+            'status':1,
+            'description':'获取成功',
+            'camera_info':camera_info,
+            'photo_info':photo_info,
+        }
+
+
+# 增加水印或添加边框
+# def watermark_image()

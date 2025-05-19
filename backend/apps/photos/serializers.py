@@ -95,3 +95,21 @@ class BasicResponseSerializer(serializers.Serializer):
     failedNum = serializers.IntegerField()
     description = serializers.CharField(allow_blank=True)
     timestamp = serializers.FloatField()
+
+class EditExifResponse(object):
+    def __init__(self,status:int,description:str,camera_info:dict,photo_info:dict):
+        self.status = status
+        self.description = description
+        self.camera_info = camera_info
+        self.photo_info = photo_info
+        self.timestamp = time.time()
+class EditExifResponseSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    description = serializers.CharField(allow_blank=True)
+    camera_info = serializers.DictField(
+        child=serializers.CharField()
+    )
+    photo_info = serializers.DictField(
+        child=serializers.CharField()
+    )
+    timestamp = serializers.FloatField()

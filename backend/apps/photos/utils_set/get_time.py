@@ -6,9 +6,6 @@ from datetime import datetime
 from functools import wraps
 
 import pyexiv2
-from PIL import Image, ExifTags
-from PIL.ExifTags import TAGS
-import argparse
 
 format_dict = {
     'YYYY-MMDD-HHMMSS': {
