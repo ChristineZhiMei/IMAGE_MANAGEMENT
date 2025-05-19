@@ -125,4 +125,4 @@ def get_image_time(image_path,target_format):
 
 # 获取支持的日期格式
 def get_format():
-    return format_dict.keys()
+    return list(format_dict.keys())

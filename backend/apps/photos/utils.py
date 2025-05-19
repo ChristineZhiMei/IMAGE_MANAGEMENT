@@ -138,6 +138,9 @@ format_suffix = {
     'TIFF':'.tiff',
     'ICO':'.ico',
 }
+def return_format_suffix():
+    return list(format_suffix.keys())
+print(return_format_suffix())
 Camera_format_suffix = ['.nef', '.nrw']
 @add_timestamp
 def format_convert(filePaths,folderPath):

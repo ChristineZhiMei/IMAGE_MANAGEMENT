@@ -9,6 +9,12 @@ from rest_framework import serializers
 import time
 # noinspection PyUnresolvedReferences
 from config import ConfigController
+
+# noinspection PyUnresolvedReferences
+from apps.photos.utils import return_format_suffix
+# noinspection PyUnresolvedReferences
+from apps.photos.utils_set.get_time import get_format
+
 # 设置默认信息对象
 configSG = ConfigController()
 
@@ -21,6 +27,8 @@ class DefaultInfo(object):
             "cachePath": configSG.get_setting()[1]
         }
         self.classify_labels = configSG.get_classify()
+        self.supportFileFormats = return_format_suffix()
+        self.supportDateFormats = get_format()
         if self.setting_path['readPath'] == '':
             self.status = 0
             self.description = '请设置图片读取路径'
@@ -36,6 +44,8 @@ class DefaultSerializer(serializers.Serializer):
     classify_labels = serializers.ListField(child=serializers.CharField())
     description = serializers.CharField(allow_blank=True)
     timestamp = serializers.FloatField()
+    supportFileFormats = serializers.ListField(child=serializers.CharField())
+    supportDateFormats = serializers.ListField(child=serializers.CharField())
 
 # 设置路径对象
 class SettingPath(object):
