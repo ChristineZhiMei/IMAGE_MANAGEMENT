@@ -7,7 +7,7 @@ from django.urls import resolve
 # noinspection PyUnresolvedReferences
 from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer
 # noinspection PyUnresolvedReferences
-from apps.photos.utils import delete_photos,copy_move_photos
+from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos
 # noinspection PyUnresolvedReferences
 from config import ConfigController
 
@@ -106,6 +106,41 @@ class CopyMovingView(View):
         filePaths = requestTemp['filePath']
         folderPath = requestTemp['folderPath']
         logs = copy_move_photos(filePaths,folderPath,url_pattern)
+        Response = BasicResponse(logs['status'],
+                                 logs['operation'],
+                                 logs['failedPath'],
+                                 logs['totalNum'],
+                                 logs['successNum'],
+                                 logs['failedNum'],
+                                 logs['description'])
+        serializer = BasicResponseSerializer(Response)
+        return JsonResponse(serializer.data)
+
+# 图片格式转换
+class FormatConvertView(View):
+    def post(self,request):
+        requestTemp = json.loads(request.body)
+        filePaths = requestTemp['filePath']
+        folderPath = requestTemp['folderPath']
+        logs = format_convert(filePaths,folderPath)
+        Response = BasicResponse(logs['status'],
+                                 logs['operation'],
+                                 logs['failedPath'],
+                                 logs['totalNum'],
+                                 logs['successNum'],
+                                 logs['failedNum'],
+                                 logs['description'])
+        serializer = BasicResponseSerializer(Response)
+        return JsonResponse(serializer.data)
+
+# 图片重命名
+class RenameView(View):
+    def post(self,request):
+        requestTemp = json.loads(request.body)
+        filePaths = requestTemp['filePath']
+        option = requestTemp['option']
+        renameFormat = requestTemp['renameFormat']
+        logs = rename_photos(filePaths,option,renameFormat)
         Response = BasicResponse(logs['status'],
                                  logs['operation'],
                                  logs['failedPath'],

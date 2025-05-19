@@ -2,3 +2,9 @@ Django==5.2.1
 djangorestframework==3.16.0
 django-cors-headers==4.7.0
 send2trash==1.8.3
+pillow==11.2.1
+imageio==2.37.0
+numpy==2.2.6
+rawpy==0.25.0
+pyexiv2==2.15.4
+
