@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 
@@ -11,7 +12,7 @@ from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rena
 # noinspection PyUnresolvedReferences
 from config import ConfigController
 # noinspection PyUnresolvedReferences
-from apps.photos.utils_set.build_index import (creat_Index)
+from apps.photos.utils_set.build_index import process_files_in_directory,create_Index
 
 configSG = ConfigController()
 # Create your views here.
@@ -191,6 +192,7 @@ class EditExifView(View):
             return JsonResponse(logs)
 
 class TestView(View):
-    def get(self,request):
-        print(creat_Index(r'O:\0-项目\IMAGE_MANAGEMENT\temp_photos\25-04.jpg'))
+    async def get(self,request):
+        # await process_files_in_directory(r'O:\0-项目\IMAGE_MANAGEMENT\temp_photos',10)
+        await create_Index(r'O:\0-项目\IMAGE_MANAGEMENT\temp_photos\DSC_7774.NEF')
         return HttpResponse("test")
