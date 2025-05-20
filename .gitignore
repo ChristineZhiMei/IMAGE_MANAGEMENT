@@ -5,3 +5,4 @@
 temp_photos
 temp2_photos
 /backend/cache/
+!backend/cache/
