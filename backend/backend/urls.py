@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from apps.photos.views import DefaultView,SettingsView
+from apps.photos.views import DefaultView,SettingsView,TestView
 
 urlpatterns = [
     # 编辑图片路由
@@ -25,4 +25,5 @@ urlpatterns = [
     # 默认信息路由
     path('default/', DefaultView.as_view()),
     path('settings/', SettingsView.as_view()),
+    path('test/',TestView.as_view())
 ]

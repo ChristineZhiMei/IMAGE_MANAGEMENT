@@ -10,6 +10,8 @@ from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,
 from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos,crop_image,getEditExif,setEditExif
 # noinspection PyUnresolvedReferences
 from config import ConfigController
+# noinspection PyUnresolvedReferences
+from apps.photos.utils_set.build_index import (creat_Index)
 
 configSG = ConfigController()
 # Create your views here.
@@ -188,3 +190,7 @@ class EditExifView(View):
             logs = setEditExif(filePath,camera_info,photo_info)
             return JsonResponse(logs)
 
+class TestView(View):
+    def get(self,request):
+        print(creat_Index(r'O:\0-项目\IMAGE_MANAGEMENT\temp_photos\25-04.jpg'))
+        return HttpResponse("test")
