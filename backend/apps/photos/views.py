@@ -7,11 +7,9 @@ from django.urls import resolve
 # noinspection PyUnresolvedReferences
 from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer,EditExifResponse,EditExifResponseSerializer
 # noinspection PyUnresolvedReferences
-from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos,crop_image
+from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos,crop_image,getEditExif,setEditExif
 # noinspection PyUnresolvedReferences
 from config import ConfigController
-# noinspection PyUnresolvedReferences
-from apps.photos.utils import getEditExif
 
 configSG = ConfigController()
 # Create your views here.
@@ -183,4 +181,10 @@ class EditExifView(View):
                                         logs['photo_info'])
             serializer = EditExifResponseSerializer(Response)
             return JsonResponse(serializer.data)
+        elif url_pattern == 'edit/setExif/':
+            filePath = json.loads(request.body)['filePath']
+            camera_info = json.loads(request.body)['camera_info']
+            photo_info = json.loads(request.body)['photo_info']
+            logs = setEditExif(filePath,camera_info,photo_info)
+            return JsonResponse(logs)
 

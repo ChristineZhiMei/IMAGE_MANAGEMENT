@@ -350,7 +350,7 @@ def getEditExif(filePath:str):
         }
     else:
         try:
-            with ImgPyexiv(r"E:\临时\semi-utils-beta\semi-utils-build1520\output\DSC_8482-已增强-降噪-1.jpg",encoding='GBK') as img:
+            with ImgPyexiv(filePath,encoding='GBK') as img:
                 exif_data = img.read_exif()
                 camera_info = {
                     "equipment_brand": exif_data.get("Exif.Image.Make", "未知"),
@@ -378,7 +378,109 @@ def getEditExif(filePath:str):
             'camera_info':camera_info,
             'photo_info':photo_info,
         }
+# 设置元数据
+@add_timestamp
+def setEditExif(filePath:str,camera_info:dict,photo_info:dict):
+    if not os.path.isfile(filePath):
+        return {
+           'status':0,
+            'description':'文件不存在',
+        }
+    else:
+        try:
+            with ImgPyexiv(filePath,encoding='GBK') as img:
+                # 读取现有 EXIF 数据
+                exif_data = img.read_exif()
+                # 更新相机信息
+                if camera_info:
+                    # 映射自定义键到 EXIF 标签
+                    exif_mapping = {
+                        "equipment_brand": "Exif.Image.Make",
+                        "equipment_model": "Exif.Image.Model",
+                        "shooting_time": "Exif.Photo.DateTimeOriginal",
+                        "lens_model": "Exif.Photo.LensModel"
+                    }
+                    for key, value in camera_info.items():
+                        if key in exif_mapping and value is not None:
+                            exif_tag = exif_mapping[key]
+                            # 特殊处理：拍摄时间需要符合 "YYYY:MM:DD HH:MM:SS" 格式
+                            if key == "shooting_time" and not value.endswith((':', ' ')):
+                                # 尝试格式化时间
+                                try:
+                                    from datetime import datetime
+                                    dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                                    value = dt.strftime("%Y:%m:%d %H:%M:%S")
+                                except:
+                                    pass
+                            exif_data[exif_tag] = value
 
+                # 更新拍摄参数
+                if photo_info:
+                    exif_mapping = {
+                        "aperture": "Exif.Photo.FNumber",
+                        "shutter_speed": "Exif.Photo.ExposureTime",
+                        "ISO": "Exif.Photo.ISOSpeedRatings",
+                        "focal_length": "Exif.Photo.FocalLength"
+                    }
 
+                    for key, value in photo_info.items():
+                        if key in exif_mapping and value is not None:
+                            exif_tag = exif_mapping[key]
+
+                            # 特殊处理：光圈值（转换为有理数格式）
+                            if key == "aperture" and isinstance(value, str) and value.startswith("f/"):
+                                try:
+                                    f_number = float(value.replace("f/", ""))
+                                    exif_data[exif_tag] = f_number
+                                except:
+                                    pass
+
+                            # 特殊处理：快门速度（转换为有理数格式）
+                            elif key == "shutter_speed":
+                                try:
+                                    if isinstance(value, str) and "/" in value:
+                                        num, denom = map(int, value.split("/"))
+                                        exif_data[exif_tag] = (num, denom)  # 分数形式
+                                    else:
+                                        exif_data[exif_tag] = float(value)  # 小数形式
+                                except:
+                                    pass
+
+                            # 特殊处理：焦距（转换为浮点数）
+                            elif key == "focal_length":
+                                try:
+                                    exif_data[exif_tag] = float(value)
+                                except:
+                                    pass
+                            # 其他参数直接设置
+                            else:
+                                exif_data[exif_tag] = value
+
+                # 写入修改后的 EXIF 数据
+                img.modify_exif(exif_data)
+        except Exception as e:
+            return {
+                'status':0,
+                'description':str(e),
+            }
+        return {
+            'status':1,
+            'description':'设置成功',
+        }
+
+# print(setEditExif("O:\\0-项目\\IMAGE_MANAGEMENT\\temp_photos\\2024-09.NEF",
+#                   {
+#                       "equipment_brand": "NIKON",
+#                       "equipment_model": "NIKON Z 5",
+#                       "shooting_time": "2024:11:02 15:53:49",
+#                       "lens_model": "NIKKOR Z 24-200mm f/4-6.3 VR"
+#                   },
+#                   {
+#                       "aperture": "56/10",
+#                       "shutter_speed": "1/250",
+#                       "ISO": "400",
+#                       "focal_length": "520/10"
+#                   }))
+# print(getEditExif("O:\\0-项目\\IMAGE_MANAGEMENT\\temp_photos\\2024-09.NEF"))
 # 增加水印或添加边框
 # def watermark_image()
