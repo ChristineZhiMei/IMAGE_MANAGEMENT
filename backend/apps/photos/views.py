@@ -6,9 +6,9 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.urls import resolve
 # noinspection PyUnresolvedReferences
-from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer,EditExifResponse,EditExifResponseSerializer
+from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer,EditExifResponse,EditExifResponseSerializer,DateStructureSerializer
 # noinspection PyUnresolvedReferences
-from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos,crop_image,getEditExif,setEditExif
+from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos,crop_image,getEditExif,setEditExif,getAllInfo
 # noinspection PyUnresolvedReferences
 from config import ConfigController
 # noinspection PyUnresolvedReferences
@@ -191,8 +191,23 @@ class EditExifView(View):
             logs = setEditExif(filePath,camera_info,photo_info)
             return JsonResponse(logs)
 
-class TestView(View):
+class LoadView(View):
     async def get(self,request):
-        # await process_files_in_directory(r'O:\0-项目\IMAGE_MANAGEMENT\temp_photos',10)
-        await create_Index(r'O:\0-项目\IMAGE_MANAGEMENT\temp_photos\DSC_7774.NEF')
-        return HttpResponse("test")
+        print(configSG.get_setting()[0])
+        if configSG.get_setting()[0] == '':
+            return JsonResponse({
+                'status':0,
+                'description':'选择目录不可用'
+            })
+        await process_files_in_directory(configSG.get_setting()[0],10)
+        # await create_Index(r'O:\0-项目\IMAGE_MANAGEMENT\temp_photos\DSC_8486-已增强-降噪.dng')
+        return JsonResponse({
+            'status':1,
+            'description':'构建成功'
+        })
+
+class GetAllInfoView(View):
+     def get(self,request):
+        logs = getAllInfo()
+        # serializer = DateStructureSerializer(logs)
+        return JsonResponse(logs)

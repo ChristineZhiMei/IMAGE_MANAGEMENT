@@ -46,14 +46,21 @@ class ConfigController:
             read_path = ''
             logs1 = "读取路径不可用，已重置为空"
             status = 0
+        cache_path2 = os.path.join(cache_path,'M_photo_cache')
         if not os.path.isdir(cache_path):
             # 不可用则重置为默认路径
-            self.config.set('Settings','cache_path',BASE_CACHE_DIR)
-            cache_path = BASE_CACHE_DIR
+            cache_path2 = BASE_CACHE_DIR
             logs2 = "缓存路径不可用，已重置为默认路径"
             status = 0
+        elif os.path.exists(cache_path2):
+            try:
+                os.mkdir(cache_path2)
+            except all:
+                cache_path2 = BASE_CACHE_DIR
+                logs2 = '无法创建目录，已重置为默认路径'
+                status = 0
         self.config.set('Settings','read_path',read_path)
-        self.config.set('Settings','cache_path',cache_path)
+        self.config.set('Settings','cache_path',cache_path2)
         # 写入配置
         with open(self.config_path, 'w', encoding='utf-8') as configfile:
             self.config.write(configfile)

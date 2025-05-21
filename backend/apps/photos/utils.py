@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 from pyexiv2 import Image as ImgPyexiv
 import rawpy
 import os
@@ -10,31 +12,39 @@ from PIL import Image
 import piexif
 # noinspection PyUnresolvedReferences
 from apps.photos.utils_set.get_time import get_image_time
+# noinspection PyUnresolvedReferences
+from photos.models import photoIndex
+from django.db.models.functions import ExtractMonth,ExtractDay
 
+# noinspection PyUnresolvedReferences
 
 # 修饰器 - 为返回结果添加时间戳
 def add_timestamp(func):
     @wraps(func)
-    def this_add(*args,**kwargs):
-        response = func(*args,**kwargs)
+    def this_add(*args, **kwargs):
+        response = func(*args, **kwargs)
         response['timestamp'] = time.time()
         return response
+
     return this_add
 
+
 # 规定基本返回格式
-def response_Type(filePaths:list,operation:str) -> dict:
+def response_Type(filePaths: list, operation: str) -> dict:
     return {
-        'status':1,
-        'operation':operation,
-        'failedPath':[],
-        'totalNum':len(filePaths),
-        'successNum':0,
-        'failedNum':0,
-        'description':'',
-        'timestamp':0,
+        'status': 1,
+        'operation': operation,
+        'failedPath': [],
+        'totalNum': len(filePaths),
+        'successNum': 0,
+        'failedNum': 0,
+        'description': '',
+        'timestamp': 0,
     }
+
+
 # 对最后的返回字典相同部分进行统一处理，减少代码量，函数中的字典为引用对象，固可以对原字典进行直接修改
-def response_unified_changed(response:dict,description_words:str):
+def response_unified_changed(response: dict, description_words: str):
     response['failedNum'] = len(response['failedPath'])
     response['successNum'] = response['totalNum'] - response['failedNum']
     if response['totalNum'] > 0:
@@ -47,22 +57,25 @@ def response_unified_changed(response:dict,description_words:str):
         else:
             response['status'] = -1
             response['description'] = f'部分{description_words}成功'
+
+
 # 检测文件重名并返回新名称
-def conflict_rename(filePath:str) -> str:
+def conflict_rename(filePath: str) -> str:
     count = 0
     dirname = os.path.dirname(filePath)
     filename, extension = os.path.splitext(os.path.basename(filePath))
     while True:
-        tempPath = os.path.join(dirname,filename+(f'_{count}' if count != 0 else '')+extension)
+        tempPath = os.path.join(dirname, filename + (f'_{count}' if count != 0 else '') + extension)
         if os.path.exists(tempPath):
             count += 1
         else:
             return tempPath
 
+
 # 删除文件
 @add_timestamp
-def delete_photos(filePaths:list[str]):
-    response = response_Type(filePaths,'delete')
+def delete_photos(filePaths: list[str]):
+    response = response_Type(filePaths, 'delete')
     if response['totalNum'] == 0:
         response['status'] = 0
         response['description'] = '未选择任何文件'
@@ -70,26 +83,26 @@ def delete_photos(filePaths:list[str]):
     for filePath in filePaths:
         if not os.path.isfile(filePath):
             response['failedPath'].append({
-                'path':filePath,
-                'description':'文件不存在'
+                'path': filePath,
+                'description': '文件不存在'
             })
             continue
         try:
             send2trash(filePath)
         except OSError as e:
             response['failedPath'].append({
-                'path':filePath,
-                'description':str(e)
+                'path': filePath,
+                'description': str(e)
             })
-    response_unified_changed(response,'删除')
+    response_unified_changed(response, '删除')
     return response
 
 
 # 剪切（移动）/复制 文件到指定目录
 
 @add_timestamp
-def copy_move_photos(filePaths:list[str],folderPath:str,operation:str):
-    response = response_Type(filePaths,operation)
+def copy_move_photos(filePaths: list[str], folderPath: str, operation: str):
+    response = response_Type(filePaths, operation)
     if response['totalNum'] == 0:
         response['status'] = 0
         response['description'] = '未选择任何文件'
@@ -103,49 +116,56 @@ def copy_move_photos(filePaths:list[str],folderPath:str,operation:str):
         # 判断文件是否存在
         if not os.path.isfile(filePath):
             response['failedPath'].append({
-                'path':filePath,
-                'description':'文件不存在'
+                'path': filePath,
+                'description': '文件不存在'
             })
             continue
         # 若操作为移动，则判断文件本身是否已经存在于所指定的目录
         if os.path.dirname(filePath) == folderPath and operation == 'move':
             response['failedPath'].append({
-                'path':filePath,
-                'description':'该文件所在文件夹为指定文件夹，无法移动'
+                'path': filePath,
+                'description': '该文件所在文件夹为指定文件夹，无法移动'
             })
             continue
         # 获取指定目录下的新文件路径
-        newfilePath = conflict_rename(os.path.join(folderPath,os.path.basename(filePath)))
+        newfilePath = conflict_rename(os.path.join(folderPath, os.path.basename(filePath)))
         # 开始移动/复制
         try:
             shutil.move(filePath, newfilePath) if operation == 'move' else shutil.copy(filePath, newfilePath)
         except FileExistsError as e:
             response['failedPath'].append({
-                'path':filePath,
-                'description':e
+                'path': filePath,
+                'description': e
             })
             continue
-    response_unified_changed(response,'移动' if operation == 'move' else '复制')
+    response_unified_changed(response, '移动' if operation == 'move' else '复制')
     return response
+
 
 # 格式转换，支持JPGE,PNG,GIF,WebP,BMP,TIFF,ICO,以及相机原始格式RAW转换为JPEG
 # 格式后缀字典
 format_suffix = {
-    'JPEG':'.jpg',
-    'PNG':'.png',
-    'GIF':'.gif',
-    'WebP':'.webp',
-    'BMP':'.bmp',
-    'TIFF':'.tiff',
-    'ICO':'.ico',
+    'JPEG': '.jpg',
+    'PNG': '.png',
+    'GIF': '.gif',
+    'WebP': '.webp',
+    'BMP': '.bmp',
+    'TIFF': '.tiff',
+    'ICO': '.ico',
 }
+
+
 def return_format_suffix():
     return list(format_suffix.keys())
+
+
 print(return_format_suffix())
 Camera_format_suffix = ['.nef', '.nrw']
+
+
 @add_timestamp
-def format_convert(filePaths,folderPath):
-    response = response_Type(filePaths,'format')
+def format_convert(filePaths, folderPath):
+    response = response_Type(filePaths, 'format')
     if response['totalNum'] == 0:
         response['status'] = 0
         response['description'] = '未选择任何文件'
@@ -159,14 +179,14 @@ def format_convert(filePaths,folderPath):
         # 判断文件是否存在
         if not os.path.isfile(filePath[0]):
             response['failedPath'].append({
-                'path':filePath,
-                'description':'文件不存在'
+                'path': filePath,
+                'description': '文件不存在'
             })
             continue
         # 检查转换后的文件在指定目录是否存在，存在则使用新名称
         filename, extension_temp = os.path.splitext(os.path.basename(filePath[0]))
-        extension = format_suffix[filePath[1]] # 获取新后缀
-        newfilePath =  conflict_rename(os.path.join(folderPath,str(filename + extension)))
+        extension = format_suffix[filePath[1]]  # 获取新后缀
+        newfilePath = conflict_rename(os.path.join(folderPath, str(filename + extension)))
         # 开始转换
         # 判断是否为相机原始格式，若为相机原始格式则使用rawpy库进行转换
         if extension_temp.lower() not in Camera_format_suffix:
@@ -176,17 +196,17 @@ def format_convert(filePaths,folderPath):
                     if extension_temp.lower() == '.png' and filePath[1].upper() == 'JPEG':
                         if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
                             img = img.convert('RGB')
-                    img.save(newfilePath,format=filePath[1].upper())
+                    img.save(newfilePath, format=filePath[1].upper())
             except Exception as e:
                 response['failedPath'].append({
-                    'path':filePath,
-                    'description':str(e)
+                    'path': filePath,
+                    'description': str(e)
                 })
                 continue
         else:
             try:
                 # 使用 pyexiv2 读取原始 RAW 文件的元数据
-                with ImgPyexiv(filePath[0],encoding='GBK') as src_img:
+                with ImgPyexiv(filePath[0], encoding='GBK') as src_img:
                     metadata = src_img.read_exif()
                     # 获取原始方向标签
                     original_orientation = metadata.get('Exif.Image.Orientation', 1)
@@ -203,7 +223,7 @@ def format_convert(filePaths,folderPath):
                     img = Image.fromarray(rgb)
                     img.save(newfilePath, quality=95, subsampling=0)
                 if filePath[1] == 'JPEG':
-                    with ImgPyexiv(newfilePath,encoding='GBK') as dst_img:
+                    with ImgPyexiv(newfilePath, encoding='GBK') as dst_img:
                         # 移除或重置方向标签（像素数据已校正，避免查看器再次旋转）
                         if 'Exif.Image.Orientation' in metadata:
                             metadata['Exif.Image.Orientation'] = 1  # 设为 1 表示正常方向
@@ -213,12 +233,14 @@ def format_convert(filePaths,folderPath):
                         dst_img.modify_exif(metadata)
             except Exception as e:
                 response['failedPath'].append({
-                    'path':filePath,
-                    'description':str(e)
+                    'path': filePath,
+                    'description': str(e)
                 })
                 continue
-    response_unified_changed(response,'格式转换')
+    response_unified_changed(response, '格式转换')
     return response
+
+
 # 图片重命名
 # 命名格式 YYYY-MMDD-HHMMSS_X X为序号，若重复则从1开始
 # 举例2025年1月1日1时1分1秒
@@ -234,8 +256,8 @@ def format_convert(filePaths,folderPath):
 #                'YY-MM'# 后两位年-月 25-01
 #                ]
 @add_timestamp
-def rename_photos(filePaths:list[list[str]],option:str,renameFormat:str):
-    response = response_Type(filePaths,f'rename<{option}>')
+def rename_photos(filePaths: list[list[str]], option: str, renameFormat: str):
+    response = response_Type(filePaths, f'rename<{option}>')
     if response['totalNum'] == 0:
         response['status'] = 0
         response['description'] = '未选择任何文件'
@@ -244,52 +266,54 @@ def rename_photos(filePaths:list[list[str]],option:str,renameFormat:str):
         # 判断文件是否存在
         if not os.path.isfile(filePath[0]):
             response['failedPath'].append({
-                'path':filePath,
-                'description':'文件不存在'
+                'path': filePath,
+                'description': '文件不存在'
             })
             continue
         # 自定义重命名
-        filename,extension_temp = os.path.splitext(os.path.basename(filePath[0]))
+        filename, extension_temp = os.path.splitext(os.path.basename(filePath[0]))
         if option == 'custom':
             if filename == filePath[1]:
                 response['failedPath'].append({
-                    'path':filePath,
-                    'description':'新名称与原名称相同'
+                    'path': filePath,
+                    'description': '新名称与原名称相同'
                 })
                 continue
-            newfilePath = conflict_rename(os.path.join(os.path.dirname(filePath[0]),str(filePath[1] + extension_temp)))
+            newfilePath = conflict_rename(os.path.join(os.path.dirname(filePath[0]), str(filePath[1] + extension_temp)))
             try:
-                os.rename(filePath[0],newfilePath)
+                os.rename(filePath[0], newfilePath)
             except Exception as e:
                 response['failedPath'].append({
-                    'path':filePath,
-                    'description':str(e)
+                    'path': filePath,
+                    'description': str(e)
                 })
                 continue
         else:
             # 按照指定格式重命名
             try:
-                newfileName = get_image_time(filePath[0],renameFormat)
+                newfileName = get_image_time(filePath[0], renameFormat)
                 if newfileName == filename:
                     response['failedPath'].append({
-                        'path':filePath,
-                        'description':'新名称与原名称相同'
+                        'path': filePath,
+                        'description': '新名称与原名称相同'
                     })
                     continue
-                newfilePath = conflict_rename(os.path.join(os.path.dirname(filePath[0]),str(newfileName + extension_temp)))
-                os.rename(filePath[0],newfilePath)
+                newfilePath = conflict_rename(
+                    os.path.join(os.path.dirname(filePath[0]), str(newfileName + extension_temp)))
+                os.rename(filePath[0], newfilePath)
             except Exception as e:
                 response['failedPath'].append({
-                    'path':filePath,
-                    'description':str(e)
+                    'path': filePath,
+                    'description': str(e)
                 })
                 continue
-    response_unified_changed(response,'重命名')
+    response_unified_changed(response, '重命名')
     return response
 
+
 @add_timestamp
-def crop_image(filePaths:list[list[str]],folderPath):
-    response = response_Type(filePaths,'crop')
+def crop_image(filePaths: list[list[str]], folderPath):
+    response = response_Type(filePaths, 'crop')
 
     if response['totalNum'] == 0:
         response['status'] = 0
@@ -305,13 +329,13 @@ def crop_image(filePaths:list[list[str]],folderPath):
         # 判断文件是否存在
         if not os.path.isfile(filePath[0]):
             response['failedPath'].append({
-                'path':filePath,
-                'description':'文件不存在'
+                'path': filePath,
+                'description': '文件不存在'
             })
             continue
 
         try:
-            filename,extension_temp = os.path.splitext(os.path.basename(filePath[0]))
+            filename, extension_temp = os.path.splitext(os.path.basename(filePath[0]))
             # 读取原始图片的 EXIF 数据
             exif_dict = {}
             with Image.open(filePath[0]) as img:
@@ -320,11 +344,12 @@ def crop_image(filePaths:list[list[str]],folderPath):
                     exif_dict = piexif.load(exif_data)
                 width, height = img.size
                 # 计算图片的裁剪大小
-                left, left_top, right, right_bottom = width * filePath[1][0], height * filePath[1][1], width * filePath[1][2], height * filePath[1][3]
+                left, left_top, right, right_bottom = width * filePath[1][0], height * filePath[1][1], width * \
+                                                      filePath[1][2], height * filePath[1][3]
                 # 裁剪图片
                 cropped_img = img.crop((left, left_top, right, right_bottom))
                 # 保存裁剪后的图片
-                newfilePath = conflict_rename(os.path.join(folderPath,str(filename + extension_temp)))
+                newfilePath = conflict_rename(os.path.join(folderPath, str(filename + extension_temp)))
                 # 写入元信息
                 if exif_dict:
                     exif_bytes = piexif.dump(exif_dict)
@@ -333,30 +358,31 @@ def crop_image(filePaths:list[list[str]],folderPath):
                     cropped_img.save(newfilePath)
         except Exception as e:
             response['failedPath'].append({
-                'path':filePath,
-                'description':str(e)
+                'path': filePath,
+                'description': str(e)
             })
         return response
 
+
 # 获取元信息
 @add_timestamp
-def getEditExif(filePath:str):
+def getEditExif(filePath: str):
     if not os.path.isfile(filePath):
         return {
-            'status':0,
-            'description':'文件不存在',
-            'camera_info':{},
-            'photo_info':{},
+            'status': 0,
+            'description': '文件不存在',
+            'camera_info': {},
+            'photo_info': {},
         }
     else:
         try:
-            with ImgPyexiv(filePath,encoding='GBK') as img:
+            with ImgPyexiv(filePath, encoding='GBK') as img:
                 exif_data = img.read_exif()
                 camera_info = {
                     "equipment_brand": exif_data.get("Exif.Image.Make", "未知"),
                     "equipment_model": exif_data.get("Exif.Image.Model", "未知"),
                     "shooting_time": exif_data.get("Exif.Photo.DateTimeOriginal", "未知"),
-                    "lens_model": exif_data.get('Exif.Photo.LensModel',"未知")
+                    "lens_model": exif_data.get('Exif.Photo.LensModel', "未知")
                 }
                 # 提取拍摄参数
                 photo_info = {
@@ -367,28 +393,30 @@ def getEditExif(filePath:str):
                 }
         except Exception as e:
             return {
-               'status':0,
-                'description':str(e),
-                'camera_info':{},
-                'photo_info':{},
+                'status': 0,
+                'description': str(e),
+                'camera_info': {},
+                'photo_info': {},
             }
         return {
-            'status':1,
-            'description':'获取成功',
-            'camera_info':camera_info,
-            'photo_info':photo_info,
+            'status': 1,
+            'description': '获取成功',
+            'camera_info': camera_info,
+            'photo_info': photo_info,
         }
+
+
 # 设置元数据
 @add_timestamp
-def setEditExif(filePath:str,camera_info:dict,photo_info:dict):
+def setEditExif(filePath: str, camera_info: dict, photo_info: dict):
     if not os.path.isfile(filePath):
         return {
-           'status':0,
-            'description':'文件不存在',
+            'status': 0,
+            'description': '文件不存在',
         }
     else:
         try:
-            with ImgPyexiv(filePath,encoding='GBK') as img:
+            with ImgPyexiv(filePath, encoding='GBK') as img:
                 # 读取现有 EXIF 数据
                 exif_data = img.read_exif()
                 # 更新相机信息
@@ -460,13 +488,14 @@ def setEditExif(filePath:str,camera_info:dict,photo_info:dict):
                 img.modify_exif(exif_data)
         except Exception as e:
             return {
-                'status':0,
-                'description':str(e),
+                'status': 0,
+                'description': str(e),
             }
         return {
-            'status':1,
-            'description':'设置成功',
+            'status': 1,
+            'description': '设置成功',
         }
+
 
 # print(setEditExif("O:\\0-项目\\IMAGE_MANAGEMENT\\temp_photos\\2024-09.NEF",
 #                   {
@@ -484,3 +513,43 @@ def setEditExif(filePath:str,camera_info:dict,photo_info:dict):
 # print(getEditExif("O:\\0-项目\\IMAGE_MANAGEMENT\\temp_photos\\2024-09.NEF"))
 # 增加水印或添加边框
 # def watermark_image()
+
+def getDict(date_type: str):
+    return {
+        'total': 0,
+        'date_type': date_type
+    }
+
+@add_timestamp
+def getAllInfo():
+    response = {'status': 1, 'description': '','total_photo': photoIndex.objects.count(), 'date': getDict('years'), }
+    years = [y['date__year'] for y in photoIndex.objects.values('date__year').distinct()]
+    response['date']['total'] = len(years)
+    for y in years:
+        response['date'][str(y)] = getDict('months')
+        months = photoIndex.objects.filter(
+            date__year=y
+        ).annotate(
+            month = ExtractMonth('date')
+        ).values_list(
+            'month',flat=True
+        ).distinct().order_by('month')
+        response['date'][str(y)]['total'] = len(months)
+        for m in months:
+            response['date'][str(y)][str(m)] = getDict('days')
+            days = photoIndex.objects.filter(
+                date__year=y,
+                date__month=m
+            ).annotate(
+                day = ExtractDay('date')
+            ).values_list(
+                'day',flat=True
+            ).distinct().order_by('day')
+            response['date'][str(y)][str(m)]['total'] = len(days)
+            for d in days:
+                response['date'][str(y)][str(m)][str(d)] = getDict('photos')
+                photos_num = photoIndex.objects.filter(
+                    date = datetime.strptime(f'{y}-{m}-{d}', "%Y-%m-%d").date()
+                ).count()
+                response['date'][str(y)][str(m)][str(d)]['total'] = photos_num
+    return response

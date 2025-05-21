@@ -113,3 +113,54 @@ class EditExifResponseSerializer(serializers.Serializer):
         child=serializers.CharField()
     )
     timestamp = serializers.FloatField()
+
+# 返回日期序列化
+class PhotoNodeSerializer(serializers.Serializer):
+    total = serializers.IntegerField()
+    date_type = serializers.CharField()
+
+class DayNodeSerializer(PhotoNodeSerializer):
+    def to_representation(self, instance):
+        # 处理日期节点下的照片数据
+        if not isinstance(instance, dict):
+            return {}
+        photo_data = instance.get('02', {})
+        return PhotoNodeSerializer(photo_data).data
+
+class MonthNodeSerializer(PhotoNodeSerializer):
+    days = serializers.SerializerMethodField()
+
+    def get_days(self, instance):
+        if not isinstance(instance, dict):
+            return {}
+        days_data = {}
+        for day_key, day_data in instance.items():
+            if isinstance(day_data, dict) and day_data.get('date_type') == 'days':
+                days_data[day_key] = day_data
+        return DayNodeSerializer(days_data, many=False).data
+
+class YearNodeSerializer(PhotoNodeSerializer):
+    months = serializers.SerializerMethodField()
+
+    def get_months(self, instance):
+        if not isinstance(instance, dict):
+            return {}
+        months_data = {}
+        for month_key, month_data in instance.items():
+            if isinstance(month_data, dict) and month_data.get('date_type') == 'months':
+                months_data[month_key] = month_data
+        return MonthNodeSerializer(months_data, many=False).data
+
+class DateStructureSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    description = serializers.CharField(allow_blank=True)
+    total_photo = serializers.IntegerField()
+    timestamp = serializers.FloatField(required=False, allow_null=True)
+    date = YearNodeSerializer(required=False, allow_null=True)
+
+    def to_representation(self, instance):
+        # 处理date字段为空的情况
+        ret = super().to_representation(instance)
+        if 'date' not in instance or instance['date'] is None:
+            ret['date'] = None
+        return ret
