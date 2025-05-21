@@ -6,6 +6,18 @@
   padding: 0;
   height: 100%;
 }
+:root{
+  --front-view-color:#010409;
+  --front-view-color-light:#0d1117;
+  --back-view-color:#f6f8fa;
+  --back-view-color-light:#ffffff;
+}
+.dark{
+  --front-view-color:#f6f8fa;
+  --front-view-color-light:#ffffff;
+  --back-view-color:#010409 ;
+  --back-view-color-light:#0d1117;
+}
 
 #app{
   width: 100%;

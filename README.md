@@ -20,10 +20,13 @@ num run dev
 
 ### 后端
  - 最好使用虚拟环境
-
+ - 数据库迁移`python manage.py makemigrations` `python manage.py migrate`
+ - 执行顺序
 ```console
 pip install -r requirements.txt
 cd backend
+python manage.py makemigrations
+python manage.py migrate
 python manage.py runserver
 ```
 

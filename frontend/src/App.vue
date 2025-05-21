@@ -10,7 +10,7 @@ const toggleDark = useToggle(isDark);
 
 <template>
   <el-container>
-    <el-header class="main-nav" height="64px">
+    <el-header class="main-nav switch-color-transition" height="64px">
       <el-row class="h-full" align="middle">
         <el-icon size="64px" class="p-4.5" @click.prevent="store.changeMenuCollapse()">
           <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -19,8 +19,8 @@ const toggleDark = useToggle(isDark);
             <path d="M5 11C4.44772 11 4 11.4477 4 12C4 12.5523 4.44772 13 5 13H13C13.5523 13 14 12.5523 14 12C14 11.4477 13.5523 11 13 11H5Z" fill="currentColor"/>
           </svg>
         </el-icon>
-        <span class="text-xl">Image Management<sup class="ml-0.5">DEV.1</sup></span>
-        <button @click="toggleDark()">
+        <span class="text-xl select-none">Image Management<sup class="ml-0.5">DEV.1</sup></span>
+        <button @click="toggleDark()" class="cursor-pointer border-b-2 border-dotted">
           <span class="ml-2 text-xl">{{ isDark ? 'Dark Edition' : 'Light Edition' }}</span>
         </button>
       </el-row>
@@ -54,9 +54,15 @@ const toggleDark = useToggle(isDark);
     width: 200px;
     flex-shrink: 0 !important;
 }
+.switch-color-transition{
+    transition: background-color .4s ease-in-out ,
+                color .4s ease-in-out !important;
+}
 .main-nav{
     padding: 0;
     border-bottom: gray 1px solid;
+    color:var(--front-view-color-light);
+    background-color: var(--back-view-color);
 }
 el-container{
     height: 100lvh;

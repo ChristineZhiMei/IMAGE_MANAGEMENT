@@ -17,4 +17,8 @@ export default defineConfig({
         resolvers: [ElementPlusResolver()],
       }),
   ],
+  server:{
+      port: 5353,
+      strictPort: false
+  }
 })
