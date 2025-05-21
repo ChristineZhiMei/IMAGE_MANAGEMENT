@@ -1,7 +1,7 @@
 from django.urls import path
 
 # noinspection PyUnresolvedReferences
-from apps.photos.views import PhotoMainView,ClassifyView,DeleteView,CopyMovingView,FormatConvertView,RenameView,CropView,EditExifView
+from apps.photos.views import PhotoMainView,ClassifyView,DeleteView,CopyMovingView,FormatConvertView,RenameView,CropView,EditExifView,GettingPhotoListView
 
 urlpatterns = [
     path('photos/', PhotoMainView.as_view()),
@@ -14,4 +14,5 @@ urlpatterns = [
     path('crop/',CropView.as_view()),
     path('getExif/',EditExifView.as_view()),
     path('setExif/',EditExifView.as_view()),
+    path('<int:year>/<int:month>/<int:day>/',GettingPhotoListView.as_view())
 ]

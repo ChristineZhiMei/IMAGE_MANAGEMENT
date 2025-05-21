@@ -553,3 +553,28 @@ def getAllInfo():
                 ).count()
                 response['date'][str(y)][str(m)][str(d)]['total'] = photos_num
     return response
+
+@add_timestamp
+def getPhotoList(year:int,month:int,day:int):
+    response = {
+        'status': 1,
+        'description': ''
+    }
+    date = datetime.strptime(f'{year}-{month}-{day}', "%Y-%m-%d").date()
+    temp_list = photoIndex.objects.filter(date = date)
+    if len(temp_list) == 0:
+        response['status'] = 0
+        response['total'] = 0
+        response['date'] = date
+        response['photoList'] = []
+        response['description'] = '未查询到结果'
+    photo_list = []
+    for temp in temp_list:
+        photo_list.append({
+            'filePath':temp.filePath,
+            'thumbnailPath':temp.thumbnailPath
+        })
+    response['total'] = len(photo_list)
+    response['date'] = date
+    response['photoList'] = photo_list
+    return response

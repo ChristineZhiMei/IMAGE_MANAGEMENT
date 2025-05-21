@@ -27,5 +27,6 @@ urlpatterns = [
     path('default/', DefaultView.as_view()),
     path('settings/', SettingsView.as_view()),
     path('loading/',LoadView.as_view()),
-    path('getinfo/',GetAllInfoView.as_view())
+    path('getinfo/',GetAllInfoView.as_view()),
+    path('getphotos/',include('apps.photos.urls'))
 ]
