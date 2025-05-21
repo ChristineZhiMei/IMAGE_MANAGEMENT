@@ -9,8 +9,8 @@ const toggleDark = useToggle(isDark);
 </script>
 
 <template>
-  <el-container>
-    <el-header class="main-nav switch-color-transition" height="64px">
+  <el-container >
+    <el-header class="main-nav switch-color switch-color-transition" height="64px">
       <el-row class="h-full" align="middle">
         <el-icon size="64px" class="p-4.5" @click.prevent="store.changeMenuCollapse()">
           <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -27,7 +27,7 @@ const toggleDark = useToggle(isDark);
     </el-header>
     <el-container class="main-view">
       <el-menu
-        class="left-menu"
+        class="left-menu switch-color-transition switch-color"
         :collapse="store.isMenuCollapse"
       >
         <el-menu-item>
@@ -39,7 +39,7 @@ const toggleDark = useToggle(isDark);
           <template #title><span class="mx-4">Overview</span></template>
         </el-menu-item>
       </el-menu>
-      <el-main>
+      <el-main class="switch-color-transition switch-color-light">
 
       </el-main>
     </el-container>
@@ -55,14 +55,22 @@ const toggleDark = useToggle(isDark);
     flex-shrink: 0 !important;
 }
 .switch-color-transition{
-    transition: background-color .4s ease-in-out ,
+  transition: background-color .4s ease-in-out ,
                 color .4s ease-in-out !important;
+
+}
+.switch-color{
+  color:var(--front-view-color-light);
+  background-color: var(--back-view-color);
+}
+.switch-color-light{
+  color:var(--front-view-color-light);
+  background-color: var(--back-view-color-light);
 }
 .main-nav{
     padding: 0;
     border-bottom: gray 1px solid;
-    color:var(--front-view-color-light);
-    background-color: var(--back-view-color);
+
 }
 el-container{
     height: 100lvh;
