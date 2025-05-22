@@ -93,6 +93,7 @@ def create_date_dir(date:str):
 
 
 async def create_Index(path:str):
+    server_paths = configSG.get_setting()
     if not os.path.exists(path):
         return False
     try:
@@ -101,8 +102,12 @@ async def create_Index(path:str):
         # 生成缩略图
         time2 = time[0:-2]+'-'+time[-2:]
         thumbnailPath = await asyncio.to_thread(generate_thumbnail,path,endPath,(600,600))
+
+        read_path = os.path.relpath(path,server_paths[0])
+        cache_path = os.path.relpath(thumbnailPath,server_paths[1])
+
         print('生成成功')
-        await create_photo_index(filePath=path, defaults = {'date':time2, 'thumbnailPath':thumbnailPath,'classification':''})
+        await create_photo_index(filePath=read_path, defaults = {'date':time2, 'thumbnailPath':cache_path,'classification':''})
     except Exception as e:
         print(e)
     return True

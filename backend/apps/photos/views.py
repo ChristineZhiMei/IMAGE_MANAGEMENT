@@ -8,7 +8,7 @@ from django.urls import resolve
 # noinspection PyUnresolvedReferences
 from apps.photos.serializers import DefaultInfo,DefaultSerializer,BasicResponse,BasicResponseSerializer,EditExifResponse,EditExifResponseSerializer,DateStructureSerializer
 # noinspection PyUnresolvedReferences
-from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos,crop_image,getEditExif,setEditExif,getAllInfo,getPhotoList
+from apps.photos.utils import delete_photos,copy_move_photos,format_convert,rename_photos,crop_image,getEditExif,setEditExif,getAllInfo,getPhotoList,server_image
 # noinspection PyUnresolvedReferences
 from config import ConfigController
 # noinspection PyUnresolvedReferences
@@ -215,3 +215,8 @@ class GetAllInfoView(View):
 class GettingPhotoListView(View):
     def get(self,request,year,month,day):
         return JsonResponse(getPhotoList(year,month,day))
+
+class ReadPhotoView(View):
+    def get(self,request,path_type,filePath):
+        logs = server_image(path_type,filePath)
+        return HttpResponse(logs,content_type=logs[1])

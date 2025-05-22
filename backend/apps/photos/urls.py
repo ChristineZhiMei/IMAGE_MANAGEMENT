@@ -14,5 +14,6 @@ urlpatterns = [
     path('crop/',CropView.as_view()),
     path('getExif/',EditExifView.as_view()),
     path('setExif/',EditExifView.as_view()),
-    path('<int:year>/<int:month>/<int:day>/',GettingPhotoListView.as_view())
+    path('<int:year>/<int:month>/<int:day>/',GettingPhotoListView.as_view()),
+
 ]

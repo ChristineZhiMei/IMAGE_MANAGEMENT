@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 
+from django.http import Http404
 from pyexiv2 import Image as ImgPyexiv
 import rawpy
 import os
@@ -15,9 +16,12 @@ from apps.photos.utils_set.get_time import get_image_time
 # noinspection PyUnresolvedReferences
 from photos.models import photoIndex
 from django.db.models.functions import ExtractMonth,ExtractDay
+# noinspection PyUnresolvedReferences
+from config import ConfigController
+
 
 # noinspection PyUnresolvedReferences
-
+configSG = ConfigController()
 # 修饰器 - 为返回结果添加时间戳
 def add_timestamp(func):
     @wraps(func)
@@ -578,3 +582,40 @@ def getPhotoList(year:int,month:int,day:int):
     response['date'] = date
     response['photoList'] = photo_list
     return response
+
+def server_image(path_type,filename):
+    paths = configSG.get_setting()
+    path_mapping = {
+        'read': paths[0],
+        'cache': paths[1],
+    }
+    directory = path_mapping.get(path_type)
+    if not directory:
+        raise Http404("路径配置不存在")
+    file_path = os.path.join(directory, filename)
+    if not _is_safe_path(file_path, directory):
+        raise Http404("文件不存在")
+    # 检查文件是否存在并可读
+    if not os.path.isfile(file_path) or not os.access(file_path, os.R_OK):
+        raise Http404("文件不存在")
+    # 根据文件类型设置MIME类型
+    content_type = _get_content_type(filename)
+    with open(file_path, 'rb') as f:
+        return f.read(),content_type
+def _is_safe_path(full_path, base_dir):
+    """验证路径是否在允许的目录内"""
+    full_path = os.path.abspath(full_path)
+    base_dir = os.path.abspath(base_dir)
+    return full_path.startswith(base_dir)
+def _get_content_type(filename):
+    """根据文件扩展名确定MIME类型"""
+    ext = os.path.splitext(filename)[1].lower()
+    mime_map = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.webp': 'image/webp',
+    }
+    return mime_map.get(ext, 'application/octet-stream')

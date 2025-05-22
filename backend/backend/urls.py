@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 # noinspection PyUnresolvedReferences
-from apps.photos.views import DefaultView,SettingsView,LoadView,GetAllInfoView
+from apps.photos.views import DefaultView,SettingsView,LoadView,GetAllInfoView,ReadPhotoView
 
 urlpatterns = [
     # ±à¼­Í¼Æ¬Â·ÓÉ
@@ -28,5 +28,6 @@ urlpatterns = [
     path('settings/', SettingsView.as_view()),
     path('loading/',LoadView.as_view()),
     path('getinfo/',GetAllInfoView.as_view()),
-    path('getphotos/',include('apps.photos.urls'))
+    path('getphotos/',include('apps.photos.urls')),
+    path('images/<str:path_type>/<path:filePath>',ReadPhotoView.as_view()),
 ]

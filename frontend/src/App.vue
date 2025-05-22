@@ -40,7 +40,9 @@ const toggleDark = useToggle(isDark);
           </el-menu-item>
         </el-menu>
         <el-main class=" switch-color-light">
-
+          <div class="w-100 h-100 bg-white rounded-lg">
+            <img src="" alt="" width="100">
+          </div>
         </el-main>
       </el-container>
     </el-container>
