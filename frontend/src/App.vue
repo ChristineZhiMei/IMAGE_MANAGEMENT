@@ -9,8 +9,9 @@ const toggleDark = useToggle(isDark);
 </script>
 
 <template>
-    <el-container >
-      <el-header class="main-nav switch-color" height="64px">
+  <div>
+    <el-container>
+      <el-header class="p-0! border-b-1 border-b-gray-500 border-dashed switch-color" height="4rem">
         <el-row class="h-full" align="middle">
           <el-icon size="64px" class="p-4.5" @click.prevent="store.changeMenuCollapse()">
             <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -25,48 +26,33 @@ const toggleDark = useToggle(isDark);
           </button>
         </el-row>
       </el-header>
-      <el-container class="main-view">
-        <el-menu
-          class="left-menu switch-color"
-          :collapse="store.isMenuCollapse"
-        >
-          <el-menu-item>
-            <el-icon size="32">
-              <svg class="stroke-2" fill="none" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor"/>
-              </svg>
-            </el-icon>
-            <template #title><span class="mx-4">Overview</span></template>
-          </el-menu-item>
-        </el-menu>
-        <el-main class=" switch-color-light">
-          <div class="w-100 h-100 bg-white rounded-lg">
-            <img src="" alt="" width="100">
+      <el-container class="h-[calc(100dvh-60px)]">
+        <el-aside :class="`
+        ${store.isMenuCollapse ? 'w-[4rem]!' : 'w-[20rem]!'}
+        border-r-1 border-dashed border-r-gray-500
+        switch-color
+        transition-w duration-500 ease-in-out`">
+          <div class="relative w-full aspect-square flex justify-center items-center ">
+            <transition name="calendar-icon">
+              <el-icon class="absolute" size="25px" v-if="store.isMenuCollapse">
+                <svg  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+                  <path fill="currentColor" d="M128 384v512h768V192H768v32a32 32 0 1 1-64 0v-32H320v32a32 32 0 0 1-64 0v-32H128v128h768v64zm192-256h384V96a32 32 0 1 1 64 0v32h160a32 32 0 0 1 32 32v768a32 32 0 0 1-32 32H96a32 32 0 0 1-32-32V160a32 32 0 0 1 32-32h160V96a32 32 0 0 1 64 0zm-32 384h64a32 32 0 0 1 0 64h-64a32 32 0 0 1 0-64m0 192h64a32 32 0 1 1 0 64h-64a32 32 0 1 1 0-64m192-192h64a32 32 0 0 1 0 64h-64a32 32 0 0 1 0-64m0 192h64a32 32 0 1 1 0 64h-64a32 32 0 1 1 0-64m192-192h64a32 32 0 1 1 0 64h-64a32 32 0 1 1 0-64m0 192h64a32 32 0 1 1 0 64h-64a32 32 0 1 1 0-64"></path>
+                </svg>
+              </el-icon>
+            </transition>
           </div>
-        </el-main>
+        </el-aside>
+        <el-main>Main</el-main>
       </el-container>
     </el-container>
+  </div>
 </template>
 
 <style scoped>
-.el-menu--collapse{
-    flex-shrink: 0 !important;
-}
-.left-menu:not(.el-menu--collapse){
-    width: 200px;
-    flex-shrink: 0 !important;
-}
 
 
-.main-nav{
-    padding: 0;
-    border-bottom: gray 1px solid;
-}
 el-container{
     height: 100lvh;
-}
-.main-view{
-    height: calc(100dvh - 60px);
 }
 
 .switch-color{
@@ -78,4 +64,19 @@ el-container{
   background-color: var(--back-view-color-light);
 }
 
+.calendar-icon-enter-from,
+.calendar-icon-leave-to {
+  opacity: 0;
+}
+.calendar-icon-enter-to,
+.calendar-icon-leave-from {
+  opacity: 1;
+}
+.calendar-icon-enter-active {
+  transition: opacity 300ms ease 200ms;
+
+}
+.calendar-icon-leave-active {
+  transition: opacity 200ms ease;
+}
 </style>
