@@ -31,7 +31,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',  # 任意字符串，用于标识缓存实例
+    }
+}
 # Application definition
 
 INSTALLED_APPS = [

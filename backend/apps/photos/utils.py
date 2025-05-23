@@ -18,7 +18,7 @@ from photos.models import photoIndex
 from django.db.models.functions import ExtractMonth,ExtractDay
 # noinspection PyUnresolvedReferences
 from config import ConfigController
-
+from django.core.cache import cache
 
 # noinspection PyUnresolvedReferences
 configSG = ConfigController()
@@ -556,6 +556,8 @@ def getAllInfo():
                     date = datetime.strptime(f'{y}-{m}-{d}', "%Y-%m-%d").date()
                 ).count()
                 response['date'][str(y)][str(m)][str(d)]['total'] = photos_num
+    response['allDates'] = list(photoIndex.objects.values_list('date',flat=True).distinct())
+    print(response)
     return response
 
 @add_timestamp
@@ -583,7 +585,15 @@ def getPhotoList(year:int,month:int,day:int):
     response['photoList'] = photo_list
     return response
 
+
 def server_image(path_type,filename):
+    # 构建缓存键，包含路径类型和文件名信息
+    cache_key = f"image_cache:{path_type}:{filename}"
+    # 尝试从缓存获取数据
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return cached_data
+
     paths = configSG.get_setting()
     path_mapping = {
         'read': paths[0],
@@ -601,7 +611,11 @@ def server_image(path_type,filename):
     # 根据文件类型设置MIME类型
     content_type = _get_content_type(filename)
     with open(file_path, 'rb') as f:
-        return f.read(),content_type
+        content = f.read()
+    # 将结果存入缓存，设置2分钟过期时间（可根据需求调整）
+    cache.set(cache_key, (content, content_type), 60 * 2)
+    return content, content_type
+
 def _is_safe_path(full_path, base_dir):
     """验证路径是否在允许的目录内"""
     full_path = os.path.abspath(full_path)

@@ -8,7 +8,7 @@ import {createPinia, defineStore} from "pinia";
 export const globalStatus = defineStore('darkCon', {
     state: () => {
         return{
-            isMenuCollapse: true
+            isMenuCollapse: false
         }
     },
     actions: {
